@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+require 'optparse'
+require 'ostruct'
+require 'ssitdp'
+
+options                = OpenStruct.new
+options.nombre_threads = 100
+options.file           = nil
+options.url            = nil
+
+OptionParser.new do |opts|
+  opts.banner = 'Usage: example.rb [options]'
+
+  opts.on('-n', '--nombrethreads N', 'Nombre de threads') do |nt|
+    options.nombre_threads = nt.to_i
+  end
+
+  opts.on('-f', '--file FILE', 'fichier CSV') do |file|
+    options.file = file
+  end
+
+  opts.on('--url URL', 'url a tester') do |url|
+    options.url = url
+  end
+end.parse!
+
+p options
+p ARGV
