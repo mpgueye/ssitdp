@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# coding: utf-8
 require 'optparse'
 require 'ostruct'
 require 'ssitdp'
@@ -7,9 +8,21 @@ options                = OpenStruct.new
 options.nombre_threads = 100
 options.file           = nil
 options.url            = nil
+options.type           = :rest
+options.methode        = :get
 
 OptionParser.new do |opts|
-  opts.banner = 'Usage: example.rb [options]'
+  opts.banner = 'Usage: ssitdp [options]'
+
+  opts.on_tail('-h', '--help', 'Aide') do
+    puts opts
+    exit
+  end
+
+  opts.on_tail('--version', 'Affiche la version') do
+    puts Ssitdp::VERSION
+    exit
+  end
 
   opts.on('-n', '--nombrethreads N', 'Nombre de threads') do |nt|
     options.nombre_threads = nt.to_i
@@ -22,7 +35,30 @@ OptionParser.new do |opts|
   opts.on('--url URL', 'url a tester') do |url|
     options.url = url
   end
+
+  opts.on('--method [METHOD]', [:get, :post], 'La méthode d\'appel HTTP (get ou post), get par défaut') do |methode|
+    options.methode = methode
+  end
+
+  opts.on('--type [TYPE]', [:rest, :soap], 'Type de test (rest ou soap), rest par défaut') do |t|
+    options.type = t
+  end
 end.parse!
 
 p options
-p ARGV
+
+if options.url.nil?
+  puts 'l\'URL est obligatoire'
+  exit
+end
+
+if options.type == :rest
+  test = Ssitdp::RestTest.new({nb_threads: options.nombre_threads, url: options.url, method: options.methode})
+  test.run!
+  exit
+end
+
+if options.type == :soap
+  puts 'ce module n\'est pas encore disponible'
+  exit
+end
