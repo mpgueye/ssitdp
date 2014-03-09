@@ -52,8 +52,31 @@ if options.url.nil?
   exit
 end
 
+params = {}
+
+unless options.file.nil?
+  if File.exist? options.file
+    if options.file[-4..-1] == '.csv'
+      CSV.foreach(options.file) do |row|
+        params[row[0]] = row[1]
+      end
+    else
+      puts 'il faut donner un fihcier au format csv'
+      exit
+    end
+  else
+    puts 'le fichier spécifié n\'existe pas'
+    exit
+  end
+end
+
 if options.type == :rest
-  test = Ssitdp::RestTest.new({nb_threads: options.nombre_threads, url: options.url, method: options.methode})
+  test = Ssitdp::RestTest.new({
+                                  nb_threads: options.nombre_threads,
+                                  url: options.url,
+                                  methode: options.methode,
+                                  params: params
+                              })
   test.run!
   exit
 end
