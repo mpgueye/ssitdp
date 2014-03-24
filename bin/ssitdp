@@ -10,6 +10,7 @@ options.file           = nil
 options.url            = nil
 options.type           = :rest
 options.methode        = :get
+options.output         = 'ssitdp_resultat.csv'
 
 OptionParser.new do |opts|
   opts.banner = 'Usage: ssitdp [options]'
@@ -32,6 +33,10 @@ OptionParser.new do |opts|
     options.file = file
   end
 
+  opts.on('-o', '--output OUTPUT', 'fichier CSV de sortie') do |output|
+    options.output = output
+  end
+
   opts.on('--url URL', 'url a tester') do |url|
     options.url = url
   end
@@ -40,7 +45,7 @@ OptionParser.new do |opts|
     options.methode = methode
   end
 
-  opts.on('--type [TYPE]', [:rest, :soap], 'Type de test (rest ou soap), rest par défaut') do |t|
+  opts.on('--type [TYPE]', [:rest], 'Type de test (rest), rest par défaut') do |t|
     options.type = t
   end
 end.parse!
@@ -52,13 +57,20 @@ if options.url.nil?
   exit
 end
 
-params = {}
+params = []
 
 unless options.file.nil?
   if File.exist? options.file
     if options.file[-4..-1] == '.csv'
+      i = 0
+      tete = []
       CSV.foreach(options.file) do |row|
-        params[row[0]] = row[1]
+        i+=1
+        if i == 1
+          tete = row.clone
+        else
+          params << Hash[tete.zip row]
+        end
       end
     else
       puts 'il faut donner un fihcier au format csv'
@@ -77,7 +89,11 @@ if options.type == :rest
                                   methode: options.methode,
                                   params: params
                               })
-  test.run!
+  resultats = test.run!
+  resultats = [['thread', 'user CPU time', 'system CPU time', 'duree', 'code reponse']] + resultats
+  CSV.open(options.output, 'w') do |csv|
+    resultats.each{ |row| csv << row }
+  end
   exit
 end
 

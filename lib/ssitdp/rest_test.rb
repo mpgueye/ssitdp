@@ -2,11 +2,11 @@ require 'rest_client'
 require 'net/http'
 require 'date'
 require 'benchmark'
+require 'csv'
 
 module Ssitdp
   class RestTest
     attr_reader :nb_threads, :url, :params, :methode
-    attr :timing
 
     # Creer un test de type Rest
     # @param params [Hash]
@@ -15,29 +15,39 @@ module Ssitdp
     def initialize(params)
       @nb_threads = params[:nb_threads]
       @url        = params[:url]
-      @params     = params[:params]
+      @params     = params[:params] || []
       @methode    = params[:methode]
       self
     end
 
     def run!
-      @timing = []
-      Benchmark.bm do |x|
+      reponses = []
+      durees = Benchmark.bm do |x|
         self.nb_threads.times do
-          Thread.new{ x.report { self.run_test } }.join
+          if self.params.count == 0
+            Thread.new{ x.report { reponses << self.run_test } }.join
+          else
+            self.params.each{ |parametres| Thread.new{ x.report { reponses << self.run_test(parametres) } }.join }
+          end
         end
       end
+
+      resultats = []
+      durees.count.times do |i|
+        duree = durees[i].to_a
+        code_reponse = reponses[i].code
+        resultats << [i, duree[1], duree[2], duree[5], code_reponse]
+      end
+      resultats
     end
 
-    #private
-
-    def run_test
+    def run_test(parametres={})
       if self.methode == :get
-        Net::HTTP.get_response URI(self.url)
+        return RestClient.get(URI.escape(self.url), {params: parametres})
       end
 
       if self.methode == :post
-        Net::HTTP.post_form URI(self.url), self.params
+        return RestClient.post(URI.escape(self.url), parametres)
       end
     end
   end
