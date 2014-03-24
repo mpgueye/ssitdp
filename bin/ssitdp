@@ -4,6 +4,7 @@ require 'optparse'
 require 'ostruct'
 require 'ssitdp'
 
+# initialisation des options par défaut
 options                = OpenStruct.new
 options.nombre_threads = 100
 options.file           = nil
@@ -15,36 +16,44 @@ options.output         = 'ssitdp_resultat.csv'
 OptionParser.new do |opts|
   opts.banner = 'Usage: ssitdp [options]'
 
+  # aide
   opts.on_tail('-h', '--help', 'Aide') do
     puts opts
     exit
   end
 
+  # versions
   opts.on_tail('--version', 'Affiche la version') do
     puts Ssitdp::VERSION
     exit
   end
 
+  # nombre de thread à lancer
   opts.on('-n', '--nombrethreads N', 'Nombre de threads') do |nt|
     options.nombre_threads = nt.to_i
   end
 
+  # fichier CSV des paramètres
   opts.on('-f', '--file FILE', 'fichier CSV') do |file|
     options.file = file
   end
 
+  # fichier CVS de sortie
   opts.on('-o', '--output OUTPUT', 'fichier CSV de sortie') do |output|
     options.output = output
   end
 
+  # url à tester
   opts.on('--url URL', 'url a tester') do |url|
     options.url = url
   end
 
+  # la méthode HTTP à utiliser
   opts.on('--method [METHOD]', [:get, :post], 'La méthode d\'appel HTTP (get ou post), get par défaut') do |methode|
     options.methode = methode
   end
 
+  # le protocole
   opts.on('--type [TYPE]', [:rest], 'Type de test (rest), rest par défaut') do |t|
     options.type = t
   end
@@ -59,6 +68,7 @@ end
 
 params = []
 
+# recupération des paramètres si le fichier est spécifié
 unless options.file.nil?
   if File.exist? options.file
     if options.file[-4..-1] == '.csv'
@@ -82,6 +92,7 @@ unless options.file.nil?
   end
 end
 
+# lancement du test de type :rest
 if options.type == :rest
   test = Ssitdp::RestTest.new({
                                   nb_threads: options.nombre_threads,
@@ -97,6 +108,7 @@ if options.type == :rest
   exit
 end
 
+# lancement du test de type :soap
 if options.type == :soap
   puts 'ce module n\'est pas encore disponible'
   exit

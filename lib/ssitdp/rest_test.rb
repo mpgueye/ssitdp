@@ -42,13 +42,8 @@ module Ssitdp
     end
 
     def run_test(parametres={})
-      if self.methode == :get
-        return RestClient.get(URI.escape(self.url), {params: parametres})
-      end
-
-      if self.methode == :post
-        return RestClient.post(URI.escape(self.url), parametres)
-      end
+      return RestClient.get(URI.escape(self.url), {params: parametres}) if self.methode == :get
+      return RestClient.post(URI.escape(self.url), parametres)          if self.methode == :post
     end
   end
 end
